@@ -1,7 +1,7 @@
 GIT
   remote: /Users/tamc/Documents/github/excel_to_code
-  revision: eb9abfebb4384723c8a4f8adccb605891e6fcb1f
-  branch: arrayFunction
+  revision: 829e599824f43fd4d0810fc8198233e15a2cbb93
+  branch: master
   specs:
     excel_to_code (0.3.2)
       ffi (~> 1.0, >= 1.0.11)
