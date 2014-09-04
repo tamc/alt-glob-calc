@@ -49,7 +49,7 @@ class TwentyFiftyServer < Sinatra::Base
   else
 
     # This is the main method for getting data
-    get '/pathways/:id/data' do |id|
+    get '/:id/data' do |id|
       last_modified Model.last_modified_date # Don't bother recalculating unless the model has changed
       expires (24*60*60), :public # cache for 1 day
       content_type :json # We return json

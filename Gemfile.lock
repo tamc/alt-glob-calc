@@ -1,18 +1,12 @@
-GIT
-  remote: /Users/tamc/Documents/github/excel_to_code
-  revision: 829e599824f43fd4d0810fc8198233e15a2cbb93
-  branch: master
+GEM
+  remote: http://rubygems.org/
   specs:
+    diff-lcs (1.2.5)
     excel_to_code (0.3.2)
       ffi (~> 1.0, >= 1.0.11)
       ox (~> 2.0, >= 2.0.12)
       rspec (~> 2.7, >= 2.7.0)
       rubypeg (~> 0)
-
-GEM
-  remote: http://rubygems.org/
-  specs:
-    diff-lcs (1.2.5)
     ffi (1.9.3)
     hike (1.2.3)
     json (1.8.1)
@@ -47,7 +41,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  excel_to_code!
+  excel_to_code (~> 0.3)
   ffi
   json
   sinatra
