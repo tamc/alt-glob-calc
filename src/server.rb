@@ -43,8 +43,12 @@ class TwentyFiftyServer < Sinatra::Base
       DataFromModel.new.calculate_pathway(id).to_json
     end
 
+    get '/:style/*' do |style, id|
+      erb :"#{style}.html"
+    end
+
     get '*' do
-      erb :'index.html'
+      erb :"index.html"
     end
   else
 
@@ -56,8 +60,13 @@ class TwentyFiftyServer < Sinatra::Base
       DataFromModel.new.calculate_pathway(id).to_json
     end
 
-    get '*' do 
-      send_file 'public/index.html'
+    get '/:style/*' do |style, id|
+      erb :'#{style}.html'
+      send_file "public/{:style}.html"
+    end
+
+    get "*" do
+      send_file "public/index.html"
     end
   end
 
