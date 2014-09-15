@@ -37,7 +37,9 @@ class DataFromModel
     # (e.g. excel.output_impots_quantity refers to the output.imports.quantity named reference)
     { 
       'code' => code, 
-      'warming' => excel.webtool_warming_2100.flatten
+      'warming' => excel.webtool_warming_2100.flatten,
+      'emissions' => excel.webtool_co2e_total_emissions.flatten,
+      'costs' => excel.webtool_costs_total_range
     }
   end
 
