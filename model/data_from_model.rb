@@ -76,7 +76,7 @@ class DataFromModel
 
   LETTER_TO_FUEL_COST_MAP = FUEL_COST_TO_LETTER_MAP.invert
 
-  STRING_TO_LETTER_MAP = COUNTRY_TO_LETTER_MAP.merge(LETTER_TO_CLIMATE_SENSITIVITY_MAP).merge(FUEL_COST_TO_LETTER_MAP)
+  STRING_TO_LETTER_MAP = COUNTRY_TO_LETTER_MAP.merge(CLIMATE_SENSITIVITY_TO_LETTER_MAP).merge(FUEL_COST_TO_LETTER_MAP)
 
   def convert_input_values_to_code(array)
     array.map do |entry|
@@ -92,11 +92,11 @@ class DataFromModel
   def convert_code_to_input_values(array)
     array.map.with_index do |entry, index|
       case index
-      when 45;
+      when 47;
         LETTER_TO_CLIMATE_SENSITIVITY_MAP[entry]
-      when 46..48;
+      when 48;
         LETTER_TO_COUNTRY_MAP[entry]
-      when 49..56
+      when 49..55
         LETTER_TO_FUEL_COST_MAP[entry]
       else 
         LETTER_TO_FLOAT_MAP[entry].to_f || entry.to_f
