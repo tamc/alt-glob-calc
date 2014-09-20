@@ -609,9 +609,9 @@ window.onscroll = onScroll;
 onScroll();
 
 var url_elements = window.location.pathname.split('/');
-if(url_elements[1].length == 57) {
+if(url_elements[2].length == 57) {
   choices = [];
-  c = url_elements[1].split('');
+  c = url_elements[2].split('');
   l = c.length;
   for(i=0; i<l;i++) {
     choices[i] = choice_for_code[c[i]];
