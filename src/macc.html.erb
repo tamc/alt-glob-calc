@@ -16,17 +16,17 @@
 body {
   font-family: 'Lato', sans-serif;
 }
-h1, #name, #chart, #controls {
+h1, #name, #chart, .controls {
   width: 100%;
   text-align: center;
   margin: 0;
 }
 
-#controls, #name {
+.controls, #name {
   font-size: smaller;
 }
 
-#controls span {
+.controls span {
   cursor: pointer;
   text-decoration: underline;
   color: #00f;
@@ -113,11 +113,12 @@ text.rightlabel {
 
 
   </style>
-  <title>Marginal abatement cost curve</title>
+  <title>Global Marginal Abatement Cost Curve</title>
   <body>
-    <h1>Marginal abatement cost curve</h1>
-    <div id='controls'>Difference between your pathway and <span id='marginal_or_level_4'>Level 1 or 4</span> in <span id='year'>2050</span> using the <span href='' id='costtype'>central</span> cost estimates</div>
+    <h1>Global Marginal Abatement Cost Curve</h1>
+    <div class='controls'>Difference between your pathway and <span id='marginal_or_level_4'>Level 1 or 4</span> in <span id='year'>2050</span> using the <span href='' id='costtype'>central</span> cost estimates.</div> 
     <div id='name'>&nbsp;</div>
+    <div class='controls'><span id='rescale'>Rescale the chart.</span></div>
     <div id='chart'>
     </div>
     <script>
@@ -381,12 +382,14 @@ function d3_layout_macc_always_include_label(d) {
 
 var data = [];
 
+var rescale_chart = false;
+
 var margin = {top: 50, right: 100, bottom: 300, left: 100},
     width = 1400 - margin.left - margin.right,
     height = 900 - margin.top - margin.bottom;
 
 var x = d3.scale.linear()
-    .domain([-200,500])
+    .domain([-100,300])
     .range([0, width]);
 
 var y = d3.scale.linear()
@@ -429,7 +432,10 @@ function draw_macc() {
 
   data = maccLayout(data);
 
-  x.domain(maccLayout.x_domain()).nice();
+  if(rescale_chart) {
+    rescale_chart = false;
+    x.domain(maccLayout.x_domain()).nice();
+  };
 
   var svg = d3.select("#chart").selectAll('svg').data([data]);
 
@@ -931,6 +937,11 @@ d3.select("#marginal_or_level_4").on('click', function() {
       c.html("Level 1 or 4");
     }
     set(code());
+    });
+
+d3.select("#rescale").on("click", function() {
+    rescale_chart = true;
+    draw_macc();
     });
 
 var url_elements = window.location.pathname.split('/');
