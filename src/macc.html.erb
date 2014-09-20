@@ -765,8 +765,10 @@ var implications;
 var implications_cache = d3.map();
 var marginal_details = d3.map();
 var expected_number_of_marginal_values = 0;
+var level_1_or_4 = true; // if false, does +/- one level marginals 
 var cost_estimate_names = ["high", "central", "low"];
-var cost_estimate = 2; // 0 = high, 1 = point, 2 = low
+var cost_estimate = 1; // 0 = high, 1 = point, 2 = low
+var year = 8; // 8 = 2050, 7 = 2045 ... 0 = 2015
 
 function set(new_code) {
   d3.select("#name").html("Loading");
@@ -805,15 +807,21 @@ function marginalise() {
     l = choices[i];
     c = choices.slice();
     if(l>=2) { 
-      //c[i] = Math.floor(l) - 1;
-      c[i] = 1;
+      if(level_1_or_4) {
+        c[i] = 1;
+      } else {
+        c[i] = Math.floor(l) - 1;
+      }
       d = code(c);
       marginal_codes.push(d);
       marginal_details.set(d, {id: i+"down", choice: i, from: l, to: c[i]});
     }
     if(l<choice_limit[i]) {
-      //c[i] = Math.floor(l) + 1;
-      c[i] = choice_limit[i];
+      if(level_1_or_4) {
+        c[i] = choice_limit[i];
+      } else {
+        c[i] = Math.floor(l) + 1;
+      }
       d = code(c);
       marginal_codes.push(d);
       marginal_details.set(d, {id: i+"up", choice: i, from: l, to: c[i]});
@@ -854,8 +862,8 @@ function implication_loaded(d) {
 
   var temp = {
     code: d.code,
-    cost: d.costs[1+cost_estimate][15], // Point estimate, 2050
-    emissions: d.emissions[19], // 2050
+    cost: d.costs[1+cost_estimate][year+7], 
+    emissions: d.emissions[year+9], 
   };
 
   if(temp.code == code()) { // It is the baseline scenario
@@ -886,7 +894,7 @@ function implication_loaded(d) {
 
   // Don't try and redraw until all the data is loaded
   if((implications != undefined) && (data.length == expected_number_of_marginal_values)) {
-    d3.select("#name").html("2050 cost: $"+format(temp.cost)+"&thinsp;bn; 2050 emissions: "+format(temp.emissions)+"&thinsp;GtCO2e");
+    d3.select("#name").html("Total cost: $"+format(temp.cost)+"&thinsp;bn; emissions: "+format(temp.emissions)+"&thinsp;GtCO2e");
     draw_macc();
   }
 }
@@ -898,12 +906,30 @@ function openInComplexTool() {
 d3.select("#name").on('click', openInComplexTool);
 
 d3.select("#costtype").on('click', function() {
-    console.log("clicked");
     c = d3.select(this);
     cost_estimate = cost_estimate + 1;
     if(cost_estimate > 2) { cost_estimate = 0; }
     c.text(cost_estimate_names[cost_estimate]);
-    d3.event.preventDefault();
+    set(code());
+    });
+
+d3.select("#year").on('click', function() {
+    c = d3.select(this);
+    year = year + 1;
+    if(year>7) { year = 0; }
+    c.text(2015+(year*5));
+    set(code());
+    });
+
+d3.select("#marginal_or_level_4").on('click', function() {
+    c = d3.select(this);
+    if(level_1_or_4) {
+      level_1_or_4 = false;
+      c.html("&plusmn;1 level");
+    } else {
+      level_1_or_4 = true;
+      c.html("Level 1 or 4");
+    }
     set(code());
     });
 
