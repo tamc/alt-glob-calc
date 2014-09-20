@@ -1,0 +1,922 @@
+<html>
+<head>
+<!-- Probably always a good idea to be utf-8 -->
+<meta charset="utf-8"> 
+<!-- So iPads can view the app in full screen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<link href='http://fonts.googleapis.com/css?family=Lato:300' rel='stylesheet' type='text/css'>
+<!-- This prevents Internet Explorer from entering 'quirks' mode -->
+<meta content='IE=edge' http-equiv='X-UA-Compatible'>
+<title>MACC &mdash; Global Calculator</title>
+<!-- assets is a function definied in the Helper module in src/server.rb --> 
+<script src='/assets/<%= assets['application.js']%>' type='text/javascript'></script>
+</head>
+<style>
+body {
+  font-family: 'Lato', sans-serif;
+}
+h1, #name, #chart, #controls {
+  width: 100%;
+  text-align: center;
+  margin: 0;
+}
+
+#controls, #name {
+  font-size: smaller;
+}
+
+#controls span {
+  cursor: pointer;
+  text-decoration: underline;
+  color: #00f;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+rect.box.hover {
+  fill: #f00;
+  cursor: pointer;
+}
+
+text.label.hover {
+  transition: fill 1s;
+  fill: #f00;
+  cursor: pointer;
+}
+
+line.label.hover {
+  transition: stroke 1s;
+  stroke: #f00;
+}
+
+rect {
+  transition: fill 1s;
+  fill-opacity: 0.5;
+  stroke: #555;
+  stroke-opacity: 0.5;
+  shape-rendering: crispEdges;
+}
+
+rect.demographics {
+  fill: #1f77b4;
+}
+
+rect.lifestyle {
+  fill: #ff7f0e;
+}
+
+rect.efficiency {
+  fill: #2ca02c;
+}
+
+rect.fuel {
+  fill: #17becf;
+}
+
+rect.ccs {
+  fill: #9467bd;
+}
+
+rect.ggr {
+  fill: #8c564b;
+}
+
+rect.bio {
+  fill: #e377c2;
+}
+
+line.label {
+  stroke: #ccc;
+  shape-rendering: crispEdges;
+}
+
+text.label {
+  fill: #777;
+  text-anchor: end;
+}
+
+text.shadow {
+  fill: white;
+  stroke: white;
+  stroke-width: 3px;
+  text-anchor: end;
+}
+
+text.rightlabel {
+  text-anchor: start;
+}
+
+
+  </style>
+  <title>Marginal abatement cost curve</title>
+  <body>
+    <h1>Marginal abatement cost curve</h1>
+    <div id='controls'>Difference between your pathway and <span id='marginal_or_level_4'>Level 1 or 4</span> in <span id='year'>2050</span> using the <span href='' id='costtype'>central</span> cost estimates</div>
+    <div id='name'>&nbsp;</div>
+    <div id='chart'>
+    </div>
+    <script>
+
+function zero_nans(n) {
+  if(typeof n != 'number') { return 0; }
+  if(isNaN(n)) { return 0; }
+  return n;
+}
+
+// Expects data to have a specified delta_x and delta_y and returns
+// it with a series of x, y, w and h attributes, where:
+// w is abs(delta_x), h is abs(delta_y/abs(delta_x)) x and y are the top left
+// corners of a rectangle, so that the rectangles are sorted
+// in order of increasing h, and so that w and h never have 
+// to be negative (because svg doesn't allow rectangles with
+// negative widths or heights).
+d3.layout.macc = function() {
+  var values = function(d) { return d; }, // d3_identity,
+      label_minimum_gap = 10,
+      delta_x_minimum_for_label = 0,
+      out = d3_layout_macc_out,
+      delta_x = d3_layout_macc_delta_x,
+      delta_y = d3_layout_macc_delta_y,
+      x_domain = [0,0],
+      always_include_label = d3_layout_macc_always_include_label,
+      h = d3_layout_macc_h; // In case want to do something else than h = abs(delta_y/delta_x)
+
+  function macc(data) {
+
+    // Convert series to canonical two-dimensional representation
+    var series = data.map(function(d,i) {
+          return values.call(macc, d, i);
+        });
+
+    // Convert each series to canonical [[d,delta_x,delta_y,h]] representation
+    // where h = y/x and d is the original datum
+    var points = series.map(function(d,i) {
+          var new_delta_x = zero_nans(delta_x.call(macc, d, i)), 
+              new_delta_y = zero_nans(delta_y.call(macc, d, i)),
+              new_h = zero_nans(h.call(macc, d, i, new_delta_x, new_delta_y));
+          return [d, new_delta_x, new_delta_y, new_h];
+        });
+
+    // Now need to sort the data. We want items with the most
+    // negative h to be closest to x = 0. Because the delta_x values
+    // might be negative, that means sliceting into positive
+    // and negative groups
+    var negative_delta_x = [],
+        positive_delta_x = [],
+        n = points.length,
+        i,
+        p;
+
+    for(i=0; i < n; ++i) {
+      p = points[i]
+      if(p[1] < 0) { // delta_x is negative
+        negative_delta_x.push(p);
+      } else {
+        positive_delta_x.push(p);
+      }
+    }
+
+    // Now we sort the negative and positive groups
+    negative_delta_x.sort(function(a,b) { return a[3] - b[3]; }); // Sorting by h
+    positive_delta_x.sort(function(a,b) { return a[3] - b[3]; }); // Sorting by h
+
+    // Now we work out the x values, turning the points into the form [[d, delta_x, delta_y, h, x]]
+    var x = 0;
+    negative_delta_x = negative_delta_x.map(function(d,i) {
+        x = x + d[1]; // Do the addition first, so x is top left of rect
+        d.push(x);
+        return d;
+        });
+
+    x_domain[0] = x;
+
+    x = 0;
+    positive_delta_x = positive_delta_x.map(function(d,i) {
+        d.push(x);
+        x = x + d[1]; // Do the addition second, so x is the top left of the rec
+        return d;
+        });
+
+    x_domain[1] = x;
+
+    // Now we slice the groups again, according to whether they have negative or positive h
+    var negative_delta_x_negative_h,
+        negative_delta_x_positive_h,
+        positive_delta_x_negative_h,
+        positive_delta_x_positive_h;
+
+    n = negative_delta_x.length;
+    for(i=0; i<n; ++i) {
+      if(negative_delta_x[i][3]>0) { break; }
+    };
+    negative_delta_x_negative_h = negative_delta_x.slice(0,i);
+    negative_delta_x_positive_h = negative_delta_x.slice(i,n);
+
+    n = positive_delta_x.length;
+    for(i=0; i<n; ++i) {
+      if(positive_delta_x[i][3]>0) { break; }
+    };
+    positive_delta_x_negative_h = positive_delta_x.slice(0,i);
+    positive_delta_x_positive_h = positive_delta_x.slice(i,n);
+
+    var minimum_space_between_label_and_block = label_minimum_gap/5;
+
+    var label_y = 0;
+
+    // Now we write things out, starting with postive_delta_x_postive_h
+    // making sure the y is top left (in this case h above the axis)
+    n = positive_delta_x_positive_h.length;
+    for(i=0; i<n; ++i) {
+      p = positive_delta_x_positive_h[i];
+      if(always_include_label(p[0]) || (p[1]>delta_x_minimum_for_label)) {
+        if((p[3]-label_y)<label_minimum_gap) {
+          label_y = label_y + label_minimum_gap;
+        } else {
+          label_y = p[3] + minimum_space_between_label_and_block;
+        }
+      }
+      out.call(macc, p[0], p[4], p[3], p[1], p[3], label_y, false); // d, x, y, w, h, label_y, label_to_right
+    };
+
+    // Now positive_delta_x_negative_h, top left is on the axis
+    // working backwards to align labels
+    label_y = 0;
+    n = positive_delta_x_negative_h.length;
+    for(i=n-1; i>=0; --i) {
+      p = positive_delta_x_negative_h[i];
+      if(always_include_label(p[0]) || (p[1]>delta_x_minimum_for_label)) {
+        if(-(p[3]-label_y)<label_minimum_gap) {
+          label_y = label_y - label_minimum_gap;
+        } else {
+          label_y = p[3] - minimum_space_between_label_and_block;
+        }
+      }
+      out.call(macc, p[0], p[4], 0, p[1], -p[3], label_y - label_minimum_gap, true); // d, x, y, w, h, label_y
+    };
+
+    // now negative_delta_x_positive_h, top left is at h
+    // working backwards to align labels
+    label_y = 0;
+    n = negative_delta_x_positive_h.length;
+    for(i=0; i<n; ++i) {
+      p = negative_delta_x_positive_h[i];
+      if(always_include_label(p[0]) || (-p[1]>delta_x_minimum_for_label)) {
+        if((p[3]-label_y)<label_minimum_gap) {
+          label_y = label_y + label_minimum_gap;
+        } else {
+          label_y = p[3] + minimum_space_between_label_and_block;
+        }
+      }
+      out.call(macc, p[0], p[4], p[3], -p[1], p[3], label_y, true); // d, x, y, w, h, label_y
+    };
+
+    // Now negative_delta_x_negative_h, top left is on the axis
+    label_y = 0;
+    n = negative_delta_x_negative_h.length;
+    for(i=n-1; i>=0; --i) {
+      p = negative_delta_x_negative_h[i];
+      if(always_include_label(p[0]) || (-p[1]>delta_x_minimum_for_label)) {
+        if(-(p[3]-label_y)<label_minimum_gap) {
+          label_y = label_y - label_minimum_gap;
+        } else {
+          label_y = p[3] - minimum_space_between_label_and_block;
+        }
+      }
+      out.call(macc, p[0], p[4], 0, -p[1], -p[3], label_y - label_minimum_gap, false); // d, x, y, w, h, label_y
+    };
+      
+    return data;
+  }
+
+  macc.values = function(z) {
+    if (!arguments.length) return values;
+    values = z;
+    return macc;
+  };
+
+  macc.delta_x = function(z) {
+    if (!arguments.length) return delta_x;
+    delta_x = z;
+    return macc;
+  };
+
+  macc.delta_y = function(z) {
+    if (!arguments.length) return delta_y;
+    delta_y = z;
+    return macc;
+  };
+
+  macc.h = function(z) {
+    if (!arguments.length) return y;
+    h = z;
+    return macc;
+  };
+
+  macc.out = function(z) {
+    if (!arguments.length) return out;
+    out = z;
+    return macc;
+  };
+
+  macc.x_domain = function() {
+    return x_domain;
+  }
+
+  // The minimum vertical space for the labels
+  macc.label_minimum_gap = function(z) {
+    if (!arguments.length) return label_minimum_gap;
+    label_minimum_gap = z;
+    return macc;
+  };
+
+  // If delta_x is less than this minimum, then no
+  // space is left for the label, except if the function below returns true
+  macc.delta_x_minimum_for_label = function(z) {
+    if (!arguments.length) return delta_x_minimum_for_label;
+    delta_x_minimum_for_label = z;
+    return macc;
+  };
+
+  macc.always_include_label = function(z) {
+    if (!arguments.length) return always_include_label;
+    always_include_label = z;
+    return macc;
+  };
+
+  return macc;
+}
+
+function d3_layout_macc_delta_x(d) {
+  return d.delta_x;
+}
+
+function d3_layout_macc_delta_y(d) {
+  return d.delta_y;
+}
+  
+function d3_layout_macc_out(d, x, y, w, h, label_y, label_to_right) {
+  d.x = x;
+  d.y = y;
+  d.w = w;
+  d.h = h;
+  d.label_y = label_y;
+  d.label_y_anchor = y > 0 ? y : y-h;
+  d.label_x = x+(w/2);
+  d.label_to_right = label_to_right; // If true, label_x is to left of label, if false, label_x is to right of label
+}
+
+function d3_layout_macc_h(d, i, delta_x, delta_y) {
+  if(delta_x == 0 ) { return 0; }
+  return delta_y/Math.abs(delta_x);
+}
+
+function d3_layout_macc_always_include_label(d) {
+  return false;
+}
+
+var data = [];
+
+var margin = {top: 50, right: 100, bottom: 300, left: 100},
+    width = 1400 - margin.left - margin.right,
+    height = 900 - margin.top - margin.bottom;
+
+var x = d3.scale.linear()
+    .domain([-200,500])
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .domain([-1000,1000])
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var delta_x_minimum_for_label = x.invert(10)-x.invert(0);
+
+var highlighted_rect = undefined;
+
+var maccLayout = d3.layout.macc()
+    .delta_x(function(d) { return d.abatement })
+    .delta_y(function(d) { return d.incremental_cost; })
+    .delta_x_minimum_for_label(delta_x_minimum_for_label)
+    .label_minimum_gap(y.invert(0)-y.invert(20))
+    .always_include_label(function(d) { return d == highlighted_rect; });
+
+function show_label(d) {
+  return (d == highlighted_rect) || (d.w > delta_x_minimum_for_label)
+}
+
+function label_y_position(d) {
+  var desired_y = y(d.label_y)+(d.label_y < 0 ? 5 : -5);
+  desired_y = Math.min(y.range()[0]+margin.bottom-20, desired_y);
+  desired_y = Math.max(y.range()[1]-margin.top+20, desired_y);
+  return desired_y;
+}
+
+function draw_macc() { 
+  if(implications == undefined) { return; }
+  if(data.length != expected_number_of_marginal_values) { return; }
+
+  data = maccLayout(data);
+
+  x.domain(maccLayout.x_domain()).nice();
+
+  var svg = d3.select("#chart").selectAll('svg').data([data]);
+
+  var gEnter = svg.enter().append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  svg = svg.select('g');
+
+  // First we lay out the boxes
+  var rects = svg.selectAll("rect.box")
+    .data(data, function(d) { return d.id; });
+
+  rects.exit().remove();
+
+  rects.enter().append("rect")
+    .attr("class", function(d) { return "box "+d.css; })
+    .on('mouseover', function(d) { highlighted_rect = d; draw_macc(); })
+    .on('mouseout', function(d) { highlighted_rect = undefined; draw_macc(); })
+    .on('click', function(d) { set(d.code); });
+  
+  rects
+    .sort(function(a,b) { return d3.ascending(a.y, b.y); } )
+    .classed("hover", function(d) { return d == highlighted_rect; })
+  .transition()
+    .attr("x", function(d) { return x(d.x); })
+    .attr("width", function(d) { return x(d.w)-x(0) })
+    .attr("y", function(d) { return y(d.y); })
+    .attr("height", function(d) { return  y(0)-y(d.h); });
+
+  // Axes next, so they are in front of rects but behind labels
+  gEnter.append("g").attr("class", "y axis")
+    .attr("transform", "translate(" + x(0) + ",0)")
+    .call(yAxis);
+
+  gEnter.append("g").attr("class", "x axis")
+    .attr("transform", "translate(0, " + y(0) + ")")
+    .call(xAxis);
+
+  svg.select(".y.axis").transition()
+    .attr("transform", "translate(" + x(0) + ",0)")
+    .call(yAxis);
+
+  svg.select(".x.axis").transition()
+    .attr("transform", "translate(0, " + y(0) + ")")
+    .call(xAxis);
+
+  gEnter.append("text")
+    .classed("ylabel", true)
+    .text("$/tCO2e")
+    .attr("y", y.range()[1]-12);
+
+  svg.select(".ylabel").transition()
+    .attr("x", x(0)-47);
+
+  gEnter.append("text")
+    .classed("xlabel", true)
+    .text("GtCO2e")
+    .attr("x", x.range()[1]-41)
+    .attr("y", y(0)+42);
+
+  // Now we lay out some shadow labels (so that the labels stand out)
+
+  var shadows = svg.selectAll("text.shadow")
+    .data(function(data) { return data.filter(show_label); }, function(d) { return d.id; });
+
+  shadows.exit().remove();
+
+  shadows.enter().append('text')
+    .classed('shadow', true);
+
+  shadows
+    .classed("rightlabel", function(d) { return d.label_to_right })
+    .text(function(d) { return d.name; })
+    .transition() 
+    .attr("x", function(d) { return x(d.label_x); })
+    .attr("y", label_y_position);
+
+  // Now we lay out the actual labels
+
+  var labels = svg.selectAll("text.label")
+    .data(function(data) { return data.filter(show_label); }, function(d) { return d.id; });
+
+  labels.exit().remove();
+
+  labels.enter().append('text')
+    .classed('label', true)
+    .on('mouseover', function(d) { highlighted_rect = d; draw_macc(); })
+    .on('mouseout', function(d) { highlighted_rect = undefined; draw_macc(); })
+    .on('click', function(d) { set(d.code); })
+    .attr("x", function(d) { return x(d.label_x); })
+    .attr("y", label_y_position);
+
+  labels
+    .classed("hover", function(d) { return d == highlighted_rect; })
+    .classed("rightlabel", function(d) { return d.label_to_right })
+    .text(function(d) { return d.name; })
+    .transition() 
+    .attr("x", function(d) { return x(d.label_x); })
+    .attr("y", label_y_position);
+
+  // Now we lay ou the lines connecting the rect to the label
+  var lines = svg.selectAll("line.label")
+    .data(function(data) { return data.filter(show_label); }, function(d) { return d.id; });
+
+  lines.exit().remove();
+
+  lines.enter().append('line')
+    .classed('label', true)
+    .attr("x1", function(d) { return x(d.label_x); })
+    .attr("x2", function(d) { return x(d.label_x); })
+    .attr("y1", function(d) { return y(d.label_y_anchor)+(d.label_y_anchor < 0 ? 2 : -2); })
+    .attr("y2", function(d) { return y(d.label_y)+(d.label_y < 0 ? -10 : 0 ); });
+
+  lines
+    .classed("hover", function(d) { return d == highlighted_rect; })
+    .transition()
+    .attr("x1", function(d) { return x(d.label_x); })
+    .attr("x2", function(d) { return x(d.label_x); })
+    .attr("y1", function(d) { return y(d.label_y_anchor)+(d.label_y_anchor < 0 ? 2 : -2); })
+    .attr("y2", function(d) { return y(d.label_y)+(d.label_y < 0 ? -10 : 0 ); });
+};
+
+var code_for_choice = {
+  0.0: "0",
+  "": "0",
+  1.0: "1",
+  1.1: "b",
+  1.2: "c",
+  1.3: "d",
+  1.4: "e",
+  1.5: "f",
+  1.6: "g",
+  1.7: "h",
+  1.8: "i",
+  1.9: "j",
+  2.0: "2",
+  2.1: "l",
+  2.2: "m",
+  2.3: "n",
+  2.4: "o",
+  2.5: "p",
+  2.6: "q",
+  2.7: "r",
+  2.8: "s",
+  2.9: "t",
+  3.0: "3",
+  3.1: "v",
+  3.2: "w",
+  3.3: "x",
+  3.4: "y",
+  3.5: "z",
+  3.6: "A",
+  3.7: "B",
+  3.8: "C",
+  3.9: "D",
+  4.0: "4"
+};
+
+var choice_names = [
+  "Global population",
+  "Urbanisation",
+  "Passenger distance",
+  "Freight distance",
+  "Transport Mode",
+  "Transport Occupancy, load & ownership",
+  "Transport Efficiency",
+  "Vehicle Electric and hydrogen",
+  "Building size",
+  "Temperature & hot water use",
+  "Lighting, cooking & appliance use",
+  "Building insulation",
+  "Temperature, cooking & lighting technology",
+  "Appliance efficiency",
+  "Product lifespan & demand",
+  "Design, material switch & recycling",
+  "Iron, steel & aluminium",
+  "Chemicals",
+  "Paper and other",
+  "Cement",
+  "Industrial Carbon capture and storage",
+  "Coal (incl. biomass) / oil / gas",
+  "Fossil fuel efficiency",
+  "Electricity Carbon capture and storage",
+  "Nuclear",
+  "Wind",
+  "Hydroelectric",
+  "Marine",
+  "Solar",
+  "Geothermal",
+  "Storage and demand shifting",
+  "Calories consumed",
+  "Meat consumed",
+  "Crop yields",
+  "Land-use efficiency ",
+  "Livestock yields",
+  "Bioenergy yields",
+  "Type of biocrop (solid / liquid)",
+  "Surplus land (forest & bioenergy) ",
+  "Biochar",
+  "Direct air capture",
+  "Ocean fertilisation",
+  "Enhanced weathering (oceanic)",
+  "Enhanced weathering (terrestial)",
+  "Wastes and residues",
+  "Emissions trajectory",
+  "Atmospheric CO2 fraction",
+  "Confidence in climate models",
+  "Region factor",
+  "Coal",
+  "Oil",
+  "Gas",
+  "Solid bioenergy",
+  "Liquid bioenergy",
+  "Gaseous bioenergy",
+  "Hydrogen"
+  ];
+
+var choice_css = [
+"demographics",
+  "demographics",
+  "lifestyle",
+  "efficiency",
+  "lifestyle",
+  "lifestyle",
+  "efficiency",
+  "fuel",
+  "lifestyle",
+  "lifestyle",
+  "lifestyle",
+  "efficiency",
+  "fuel",
+  "efficiency",
+  "lifestyle",
+  "efficiency",
+  "efficiency",
+  "efficiency",
+  "efficiency",
+  "efficiency",
+  "ccs",
+  "fuel",
+  "efficiency",
+  "ccs",
+  "fuel",
+  "fuel",
+  "fuel",
+  "fuel",
+  "fuel",
+  "fuel",
+  "fuel",
+  "lifestyle",
+  "lifestyle",
+  "bio",
+  "bio",
+  "bio",
+  "bio",
+  "fuel",
+  "bio",
+  "ccs",
+  "ccs",
+  "ccs",
+  "ccs",
+  "ccs",
+  "fuel",
+  "demographics"
+];
+
+var choice_limit = [
+  3.0,
+  3.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+  4.0,
+];
+
+var choice_for_code = {};
+var name, c;
+
+for (name in code_for_choice) {
+  if (code_for_choice.hasOwnProperty(name)) {
+    c = code_for_choice[name];
+    choice_for_code[c] = +name;
+  }
+};
+
+var choice_data;
+var choices = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var implications;
+var implications_cache = d3.map();
+var marginal_details = d3.map();
+var expected_number_of_marginal_values = 0;
+var cost_estimate_names = ["high", "central", "low"];
+var cost_estimate = 2; // 0 = high, 1 = point, 2 = low
+
+function set(new_code) {
+  d3.select("#name").html("Loading");
+  c = new_code.split('');
+  l = c.length;
+  for(i=0; i<l;i++) {
+    choices[i] = choice_for_code[c[i]];
+  }
+  updateUrl();
+  data.length = 0;
+  implications = undefined;
+  loadImplications();
+  loadMarginals();
+};
+
+function updateUrl() {
+  if(history['pushState'] == null) { return; }
+  history.pushState(choices, code(), "/macc/"+code());
+}
+
+function code(choice_array) {
+  if(choice_array == undefined) { choice_array = choices; }
+  var c = [];
+  var i;
+  var l = choice_array.length;
+  for(i=0; i<l; i++) {
+    c.push(code_for_choice[choice_array[i]]);
+  }
+  return c.join('');
+};
+
+function marginalise() {
+  var marginal_codes = [];
+  var i, c, l, d;
+  for(i = 0; i < 46; ++i) {
+    l = choices[i];
+    c = choices.slice();
+    if(l>=2) { 
+      //c[i] = Math.floor(l) - 1;
+      c[i] = 1;
+      d = code(c);
+      marginal_codes.push(d);
+      marginal_details.set(d, {id: i+"down", choice: i, from: l, to: c[i]});
+    }
+    if(l<choice_limit[i]) {
+      //c[i] = Math.floor(l) + 1;
+      c[i] = choice_limit[i];
+      d = code(c);
+      marginal_codes.push(d);
+      marginal_details.set(d, {id: i+"up", choice: i, from: l, to: c[i]});
+    }
+  }
+  return marginal_codes;
+}
+
+function loadMarginals() {
+  var marginal_codes = marginalise();
+  expected_number_of_marginal_values = marginal_codes.length;
+  marginal_codes.forEach(function(c) {
+      loadImplications(c);
+      });
+}
+
+function loadImplications(c) {
+  if(c == undefined) { c = code(); };
+  cached_implication = implications_cache.get(c);
+
+  if(cached_implication != undefined) { 
+    implication_loaded(cached_implication);
+  } else {
+    d3.json("/"+c+"/data", function(error, data) {
+      if(error != undefined) {
+        console.log("Error loading", error);
+        return;
+        };
+        implications_cache.set(data.code, data);
+        implication_loaded(data);
+      });
+  }
+}
+
+var format = d3.format(".0f");
+
+function implication_loaded(d) {
+
+  var temp = {
+    code: d.code,
+    cost: d.costs[1+cost_estimate][15], // Point estimate, 2050
+    emissions: d.emissions[19], // 2050
+  };
+
+  if(temp.code == code()) { // It is the baseline scenario
+    temp.incremental_cost = 0;
+    temp.abatement = 0;
+    implications = temp;
+
+    data.forEach(function(already_loaded_datum) {
+        already_loaded_datum.incremental_cost = already_loaded_datum.cost - implications.cost;
+        already_loaded_datum.abatement = implications.emissions - already_loaded_datum.emissions;
+        });
+
+  } else { // It is a marginal change to the baseline scenario
+    details = marginal_details.get(d.code);
+    temp.id = details.id;
+    temp.choice = details.choice;
+    temp.from = details.from;
+    temp.to = details.to;
+    temp.css = choice_css[details.choice];
+    temp.name = choice_names[details.choice]+" level "+details.from+" to level "+details.to;
+    if(implications != undefined) { // If have central scenario can do deltas
+      temp.incremental_cost = temp.cost - implications.cost;
+      temp.abatement = implications.emissions - temp.emissions;
+    }
+    data.push(temp);
+  }
+
+
+  // Don't try and redraw until all the data is loaded
+  if((implications != undefined) && (data.length == expected_number_of_marginal_values)) {
+    d3.select("#name").html("2050 cost: $"+format(temp.cost)+"&thinsp;bn; 2050 emissions: "+format(temp.emissions)+"&thinsp;GtCO2e");
+    draw_macc();
+  }
+}
+
+function openInComplexTool() {
+  window.location = "http://tool.globalcalculator.org/globcalcdv12mldlsxv3541-v11.html?levers="+code().substr(0,57)+"/dashboard";;
+};
+
+d3.select("#name").on('click', openInComplexTool);
+
+d3.select("#costtype").on('click', function() {
+    console.log("clicked");
+    c = d3.select(this);
+    cost_estimate = cost_estimate + 1;
+    if(cost_estimate > 2) { cost_estimate = 0; }
+    c.text(cost_estimate_names[cost_estimate]);
+    d3.event.preventDefault();
+    set(code());
+    });
+
+var url_elements = window.location.pathname.split('/');
+if(url_elements[2].length == 57) {
+  set(url_elements[2])
+} else {
+  set(code());
+}
+
+
+
+
+    </script>
+    </body>
+    </html>
