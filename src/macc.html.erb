@@ -112,6 +112,12 @@ text.rightlabel {
 }
 
 
+div#loading {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+}
+
   </style>
   <body>
     <h1>Global Calculator&mdash;Marginal Abatement Cost Curve</h1>
@@ -120,6 +126,7 @@ text.rightlabel {
     <div class='controls'><span id='rescale'>Rescale the chart.</span></div>
     <div id='chart'>
     </div>
+    <div id='loading'></div>
     <script>
 
 function zero_nans(n) {
@@ -226,10 +233,40 @@ d3.layout.macc = function() {
 
     var minimum_space_between_label_and_block = label_minimum_gap/5;
 
+    // now negative_delta_x_positive_h, top left is at h
+    // working backwards to align labels
     var label_y = 0;
+    n = negative_delta_x_positive_h.length;
+    for(i=0; i<n; ++i) {
+      p = negative_delta_x_positive_h[i];
+      if(always_include_label(p[0]) || (-p[1]>delta_x_minimum_for_label)) {
+        if((p[3]-label_y)<label_minimum_gap) {
+          label_y = label_y + label_minimum_gap;
+        } else {
+          label_y = p[3] + minimum_space_between_label_and_block;
+        }
+      }
+      out.call(macc, p[0], p[4], p[3], -p[1], p[3], label_y, true); // d, x, y, w, h, label_y
+    };
 
-    // Now we write things out, starting with postive_delta_x_postive_h
+    // Now negative_delta_x_negative_h, top left is on the axis
+    label_y = 0;
+    n = negative_delta_x_negative_h.length;
+    for(i=n-1; i>=0; --i) {
+      p = negative_delta_x_negative_h[i];
+      if(always_include_label(p[0]) || (-p[1]>delta_x_minimum_for_label)) {
+        if(-(p[3]-label_y)<label_minimum_gap) {
+          label_y = label_y - label_minimum_gap;
+        } else {
+          label_y = p[3] - minimum_space_between_label_and_block;
+        }
+      }
+      out.call(macc, p[0], p[4], 0, -p[1], -p[3], label_y - label_minimum_gap, false); // d, x, y, w, h, label_y
+    };
+
+    // Now postive_delta_x_postive_h
     // making sure the y is top left (in this case h above the axis)
+    label_y = 0;
     n = positive_delta_x_positive_h.length;
     for(i=0; i<n; ++i) {
       p = positive_delta_x_positive_h[i];
@@ -259,36 +296,6 @@ d3.layout.macc = function() {
       out.call(macc, p[0], p[4], 0, p[1], -p[3], label_y - label_minimum_gap, true); // d, x, y, w, h, label_y
     };
 
-    // now negative_delta_x_positive_h, top left is at h
-    // working backwards to align labels
-    label_y = 0;
-    n = negative_delta_x_positive_h.length;
-    for(i=0; i<n; ++i) {
-      p = negative_delta_x_positive_h[i];
-      if(always_include_label(p[0]) || (-p[1]>delta_x_minimum_for_label)) {
-        if((p[3]-label_y)<label_minimum_gap) {
-          label_y = label_y + label_minimum_gap;
-        } else {
-          label_y = p[3] + minimum_space_between_label_and_block;
-        }
-      }
-      out.call(macc, p[0], p[4], p[3], -p[1], p[3], label_y, true); // d, x, y, w, h, label_y
-    };
-
-    // Now negative_delta_x_negative_h, top left is on the axis
-    label_y = 0;
-    n = negative_delta_x_negative_h.length;
-    for(i=n-1; i>=0; --i) {
-      p = negative_delta_x_negative_h[i];
-      if(always_include_label(p[0]) || (-p[1]>delta_x_minimum_for_label)) {
-        if(-(p[3]-label_y)<label_minimum_gap) {
-          label_y = label_y - label_minimum_gap;
-        } else {
-          label_y = p[3] - minimum_space_between_label_and_block;
-        }
-      }
-      out.call(macc, p[0], p[4], 0, -p[1], -p[3], label_y - label_minimum_gap, false); // d, x, y, w, h, label_y
-    };
       
     return data;
   }
@@ -461,7 +468,6 @@ function draw_macc() {
     .on('click', function(d) { set(d.code); });
   
   rects
-    .sort(function(a,b) { return d3.ascending(a.y, b.y); } )
     .classed("hover", function(d) { return d == highlighted_rect; })
   .transition()
     .attr("x", function(d) { return x(d.x); })
@@ -511,6 +517,7 @@ function draw_macc() {
     .classed('shadow', true);
 
   shadows
+    .order()
     .classed("rightlabel", function(d) { return d.label_to_right })
     .text(function(d) { return d.name; })
     .transition() 
@@ -533,6 +540,7 @@ function draw_macc() {
     .attr("y", label_y_position);
 
   labels
+    .order()
     .classed("hover", function(d) { return d == highlighted_rect; })
     .classed("rightlabel", function(d) { return d.label_to_right })
     .text(function(d) { return d.name; })
@@ -776,9 +784,13 @@ var level_1_or_4 = true; // if false, does +/- one level marginals
 var cost_estimate_names = ["high", "central", "low"];
 var cost_estimate = 1; // 0 = high, 1 = point, 2 = low
 var year = 8; // 8 = 2050, 7 = 2045 ... 0 = 2015
+var loading_timer = undefined;
+
+var percent_format = d3.format(".0%");
 
 function set(new_code) {
-  d3.select("#name").html("Loading");
+  d3.select("#loading").html("Loading 0%");
+  loading_timer = setInterval(function() { d3.select("#loading").html("Loading "+percent_format(data.length / expected_number_of_marginal_values)); },100);
   c = new_code.split('');
   l = c.length;
   for(i=0; i<l;i++) {
@@ -903,13 +915,15 @@ function implication_loaded(d) {
 
   // Don't try and redraw until all the data is loaded
   if((implications != undefined) && (data.length == expected_number_of_marginal_values)) {
+    clearInterval(loading_timer);
+    d3.select("#loading").html("");
     d3.select("#name").html("Total cost: $"+format(temp.cost)+"&thinsp;bn; emissions: "+format(temp.emissions)+"&thinsp;GtCO2e; warming: "+temp_format(temp.warming[1])+"&ndash;"+temp_format(temp.warming[0])+"&deg;C");
     draw_macc();
   }
 }
 
 function openInComplexTool() {
-  window.location = "http://tool.globalcalculator.org/globcalcdv12mldlsxv3541-v11.html?levers="+code().substr(0,57)+"/dashboard";;
+  window.location = "http://tool.globalcalculator.org/globcalcdv12mldlsxv3541.html?levers="+code().substr(0,57)+"/dashboard";;
 };
 
 d3.select("#name").on('click', openInComplexTool);
