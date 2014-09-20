@@ -113,9 +113,8 @@ text.rightlabel {
 
 
   </style>
-  <title>Global Marginal Abatement Cost Curve</title>
   <body>
-    <h1>Global Marginal Abatement Cost Curve</h1>
+    <h1>Global Calculator&mdash;Marginal Abatement Cost Curve</h1>
     <div class='controls'>Difference between your pathway and <span id='marginal_or_level_4'>Level 1 or 4</span> in <span id='year'>2050</span> using the <span href='' id='costtype'>central</span> cost estimates.</div> 
     <div id='name'>&nbsp;</div>
     <div class='controls'><span id='rescale'>Rescale the chart.</span></div>
@@ -404,7 +403,7 @@ var yAxis = d3.svg.axis()
     .scale(y)
     .orient("left");
 
-var delta_x_minimum_for_label = x.invert(10)-x.invert(0);
+var delta_x_minimum_for_label = x.invert(20)-x.invert(0);
 
 var highlighted_rect = undefined;
 
@@ -430,12 +429,14 @@ function draw_macc() {
   if(implications == undefined) { return; }
   if(data.length != expected_number_of_marginal_values) { return; }
 
-  data = maccLayout(data);
-
   if(rescale_chart) {
     rescale_chart = false;
     x.domain(maccLayout.x_domain()).nice();
+    delta_x_minimum_for_label = x.invert(20)-x.invert(0);
+    maccLayout.delta_x_minimum_for_label(delta_x_minimum_for_label);
   };
+
+  data = maccLayout(data);
 
   var svg = d3.select("#chart").selectAll('svg').data([data]);
 
@@ -766,7 +767,7 @@ for (name in code_for_choice) {
 };
 
 var choice_data;
-var choices = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+var choices = [];
 var implications;
 var implications_cache = d3.map();
 var marginal_details = d3.map();
@@ -863,6 +864,7 @@ function loadImplications(c) {
 }
 
 var format = d3.format(".0f");
+var temp_format = d3.format(".1f");
 
 function implication_loaded(d) {
 
@@ -870,6 +872,7 @@ function implication_loaded(d) {
     code: d.code,
     cost: d.costs[1+cost_estimate][year+7], 
     emissions: d.emissions[year+9], 
+    warming: d.warming
   };
 
   if(temp.code == code()) { // It is the baseline scenario
@@ -900,7 +903,7 @@ function implication_loaded(d) {
 
   // Don't try and redraw until all the data is loaded
   if((implications != undefined) && (data.length == expected_number_of_marginal_values)) {
-    d3.select("#name").html("Total cost: $"+format(temp.cost)+"&thinsp;bn; emissions: "+format(temp.emissions)+"&thinsp;GtCO2e");
+    d3.select("#name").html("Total cost: $"+format(temp.cost)+"&thinsp;bn; emissions: "+format(temp.emissions)+"&thinsp;GtCO2e; warming: "+temp_format(temp.warming[1])+"&ndash;"+temp_format(temp.warming[0])+"&deg;C");
     draw_macc();
   }
 }
@@ -948,7 +951,7 @@ var url_elements = window.location.pathname.split('/');
 if(url_elements[2].length == 57) {
   set(url_elements[2])
 } else {
-  set(code());
+  set("2222j21222gfgebf1jg1i2cjgjeeefpj2h1DD1111114221111111111j");
 }
 
 
