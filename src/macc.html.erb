@@ -107,6 +107,15 @@ text.shadow {
   text-anchor: end;
 }
 
+text.quadrant {
+  fill: grey;
+  font-size: 9px;
+}
+
+text.right {
+  text-anchor: end;
+}
+
 text.rightlabel {
   text-anchor: start;
 }
@@ -118,15 +127,31 @@ div#loading {
   top: 15px;
 }
 
+div#infobox {
+  transition: fill 1s;
+  transition: color 1s;
+  background-color: rgba(255,255,255,0);
+  color: rgba(0,0,0,0);
+  position: absolute;
+  padding: 10px;
+  right: 0px;
+  bottom: 0px;
+}
+
+div#infobox.show {
+  background-color: rgba(255,255,255,0.7);
+  color: rgba(0,0,0,1);
+}
+
   </style>
   <body>
     <h1>Global Calculator&mdash;Marginal Abatement Cost Curve</h1>
-    <div class='controls'>Difference between your pathway and <span id='marginal_or_level_4'>Level 1 or 4</span> in <span id='year'>2050</span> using the <span href='' id='costtype'>central</span> cost estimates.</div> 
+    <div class='controls'>Difference between your pathway and <span id='marginal_or_level_4'>Level 1 or 4</span> in <span id='year'>2050</span> using the <span href='' id='costtype'>central</span> cost estimates</div> 
     <div id='name'>&nbsp;</div>
-    <div class='controls'><span id='rescale'>Rescale the chart.</span></div>
-    <div id='chart'>
-    </div>
+    <div class='controls'>Rescale the <span id='xrescale'>x-axis</span> or <span id='yrescale'>y-axis</span></div>
+    <div id='chart'> </div>
     <div id='loading'></div>
+    <div id='infobox'></div>
     <script>
 
 function zero_nans(n) {
@@ -389,6 +414,8 @@ function d3_layout_macc_always_include_label(d) {
 var data = [];
 
 var rescale_chart = false;
+var ylimits = [50, 100, 500, 1000];
+var ylimit_chosen = 3;
 
 var margin = {top: 50, right: 100, bottom: 300, left: 100},
     width = 1400 - margin.left - margin.right,
@@ -399,7 +426,7 @@ var x = d3.scale.linear()
     .range([0, width]);
 
 var y = d3.scale.linear()
-    .domain([-1000,1000])
+    .domain([-500,500])
     .range([height, 0]);
 
 var xAxis = d3.svg.axis()
@@ -418,7 +445,6 @@ var maccLayout = d3.layout.macc()
     .delta_x(function(d) { return d.abatement })
     .delta_y(function(d) { return d.incremental_cost; })
     .delta_x_minimum_for_label(delta_x_minimum_for_label)
-    .label_minimum_gap(y.invert(0)-y.invert(20))
     .always_include_label(function(d) { return d == highlighted_rect; });
 
 function show_label(d) {
@@ -443,6 +469,9 @@ function draw_macc() {
     maccLayout.delta_x_minimum_for_label(delta_x_minimum_for_label);
   };
 
+  y.domain([-ylimits[ylimit_chosen], ylimits[ylimit_chosen]]);
+  maccLayout.label_minimum_gap(y.invert(0)-y.invert(20));
+
   data = maccLayout(data);
 
   var svg = d3.select("#chart").selectAll('svg').data([data]);
@@ -455,8 +484,16 @@ function draw_macc() {
 
   svg = svg.select('g');
 
-  // First we lay out the boxes
-  var rects = svg.selectAll("rect.box")
+
+  // Arrange some groups in the right order
+  gEnter.append("g").attr("id", "boxlayer");
+  gEnter.append("g").attr("id", "axislayer");
+  gEnter.append("g").attr("id", "shadowlayer");
+  gEnter.append("g").attr("id", "labellayer");
+  gEnter.append("g").attr("id", "linelayer");
+
+  // Lay out the boxes
+  var rects = svg.select("g#boxlayer").selectAll("rect.box")
     .data(data, function(d) { return d.id; });
 
   rects.exit().remove();
@@ -476,11 +513,13 @@ function draw_macc() {
     .attr("height", function(d) { return  y(0)-y(d.h); });
 
   // Axes next, so they are in front of rects but behind labels
-  gEnter.append("g").attr("class", "y axis")
+  var axisLayer = gEnter.select("g#axislayer");
+
+  axisLayer.append("g").attr("class", "y axis")
     .attr("transform", "translate(" + x(0) + ",0)")
     .call(yAxis);
 
-  gEnter.append("g").attr("class", "x axis")
+  axisLayer.append("g").attr("class", "x axis")
     .attr("transform", "translate(0, " + y(0) + ")")
     .call(xAxis);
 
@@ -492,7 +531,7 @@ function draw_macc() {
     .attr("transform", "translate(0, " + y(0) + ")")
     .call(xAxis);
 
-  gEnter.append("text")
+  axisLayer.append("text")
     .classed("ylabel", true)
     .text("$/tCO2e")
     .attr("y", y.range()[1]-12);
@@ -500,7 +539,7 @@ function draw_macc() {
   svg.select(".ylabel").transition()
     .attr("x", x(0)-47);
 
-  gEnter.append("text")
+  axisLayer.append("text")
     .classed("xlabel", true)
     .text("GtCO2e")
     .attr("x", x.range()[1]-41)
@@ -508,7 +547,7 @@ function draw_macc() {
 
   // Now we lay out some shadow labels (so that the labels stand out)
 
-  var shadows = svg.selectAll("text.shadow")
+  var shadows = svg.select("g#shadowlayer").selectAll("text.shadow")
     .data(function(data) { return data.filter(show_label); }, function(d) { return d.id; });
 
   shadows.exit().remove();
@@ -526,7 +565,7 @@ function draw_macc() {
 
   // Now we lay out the actual labels
 
-  var labels = svg.selectAll("text.label")
+  var labels = svg.select("g#labellayer").selectAll("text.label")
     .data(function(data) { return data.filter(show_label); }, function(d) { return d.id; });
 
   labels.exit().remove();
@@ -549,7 +588,7 @@ function draw_macc() {
     .attr("y", label_y_position);
 
   // Now we lay ou the lines connecting the rect to the label
-  var lines = svg.selectAll("line.label")
+  var lines = svg.select("g#linelayer").selectAll("line.label")
     .data(function(data) { return data.filter(show_label); }, function(d) { return d.id; });
 
   lines.exit().remove();
@@ -568,6 +607,22 @@ function draw_macc() {
     .attr("x2", function(d) { return x(d.label_x); })
     .attr("y1", function(d) { return y(d.label_y_anchor)+(d.label_y_anchor < 0 ? 2 : -2); })
     .attr("y2", function(d) { return y(d.label_y)+(d.label_y < 0 ? -10 : 0 ); });
+
+  // Now add info box
+  if(highlighted_rect != undefined ) {
+    var emissions_direction = highlighted_rect.abatement > 0 ? "reduces" : "increases";
+    var costs_direction = highlighted_rect.incremental_cost > 0 ? "increases" : "reduces";
+    d3.select("#infobox").html(
+        "Changing "+highlighted_rect.name+" "+
+        emissions_direction+" emissions by "+format(Math.abs(highlighted_rect.abatement))+"&thinsp;GtCO<sub>2</sub>e and "+
+        costs_direction+" costs by $"+format(Math.abs(highlighted_rect.incremental_cost))+"&thinsp;bn (equivalent to "+
+        format(highlighted_rect.incremental_cost/Math.abs(highlighted_rect.abatement))+"&thinsp;$/tCO<sub>2</sub>e)"
+        )
+      .classed("show", true);
+  } else {
+    d3.select("#infobox").text("").classed("show",false);
+  }
+
 };
 
 var code_for_choice = {
@@ -956,8 +1011,14 @@ d3.select("#marginal_or_level_4").on('click', function() {
     set(code());
     });
 
-d3.select("#rescale").on("click", function() {
+d3.select("#xrescale").on("click", function() {
     rescale_chart = true;
+    draw_macc();
+    });
+
+d3.select("#yrescale").on("click", function() {
+    ylimit_chosen += 1;
+    if(ylimit_chosen > ylimits.length-1) { ylimit_chosen = 0; }
     draw_macc();
     });
 
