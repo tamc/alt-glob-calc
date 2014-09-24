@@ -7,7 +7,7 @@ Bundler.setup
 require './src/server'
 
 # src/compile_template.rb deals with turning the src/index.html.erb into the main page
-require './src/compile_template'
+require './src/compile_templates'
 
 # The server can run in two modes, 'production' and 'development'
 # the mode is set in the RACK_ENV or RAILS_ENV environment variables
@@ -15,10 +15,10 @@ ENV['RACK_ENV'] = ENV['RAILS_ENV'] if ENV['RAILS_ENV']
 
 # When in production mode, we precompile the templates and javascripts
 if ENV['RACK_ENV'] == 'production'
-  CompileTemplate.new.compile!
+  CompileTemplates.new.compile!
 else
   # When in development mode, we generate templates and javascripts on demand
-  CompileTemplate.new.remove!
+  CompileTemplates.new.remove!
 end
 
 # This sets up the bits of the server

@@ -1,7 +1,7 @@
 require_relative 'server'
 
 # When in production mode, we precompile the templates and javascripts
-class CompileTemplate
+class CompileTemplates
   include Helper
 
   def manifest_file
@@ -9,12 +9,16 @@ class CompileTemplate
     File.join(File.dirname(__FILE__), '../public/assets/manifest.json')
   end
 
-  def erb_file
-    File.join(File.dirname(__FILE__), 'index.html.erb')
+  def erb_files
+    h = {}
+    %w{index macc slider}.each do |name|
+      h[File.join(File.dirname(__FILE__), "#{name}.html.erb")] = File.join(File.dirname(__FILE__), "../public/#{name}.html")
+    end
+    h
   end
 
-  def html_file
-    File.join(File.dirname(__FILE__), '../public/index.html')
+  def html_files
+    erb_files.values
   end
 
   def javascript_dir
@@ -54,9 +58,11 @@ class CompileTemplate
   def compile_html
     assets = JSON.parse(IO.readlines(manifest_file).join)['assets']
 
-    input = IO.readlines(erb_file).join
-    File.open(html_file, 'w') do |f|
-      f.puts ERB.new(input).result(binding)
+    erb_files.each do |erb, html|
+      input = IO.readlines(erb).join
+      File.open(html, 'w') do |f|
+        f.puts ERB.new(input).result(binding)
+      end
     end
   end
 
@@ -67,8 +73,10 @@ class CompileTemplate
     # Can leave the compiled stylesheets and javascripts because the ones in
     # src/javascripts and src/stylesheets will be loaded in preference to the
     # ones in public/assets
-    return unless File.exists?(html_file)
-    File.delete(html_file)
+    html_files.each do |html_file|
+      next unless File.exists?(html_file)
+      File.delete(html_file)
+    end
   end
 
 end

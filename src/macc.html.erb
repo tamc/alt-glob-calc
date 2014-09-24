@@ -413,7 +413,7 @@ function d3_layout_macc_always_include_label(d) {
 
 var data = [];
 
-var rescale_chart = false;
+var rescale_chart = true;
 var ylimits = [50, 100, 500, 1000];
 var ylimit_chosen = 3;
 
@@ -462,17 +462,18 @@ function draw_macc() {
   if(implications == undefined) { return; }
   if(data.length != expected_number_of_marginal_values) { return; }
 
+  y.domain([-ylimits[ylimit_chosen], ylimits[ylimit_chosen]]);
+  maccLayout.label_minimum_gap(y.invert(0)-y.invert(20));
+
+  data = maccLayout(data);
+
   if(rescale_chart) {
     rescale_chart = false;
     x.domain(maccLayout.x_domain()).nice();
     delta_x_minimum_for_label = x.invert(20)-x.invert(0);
     maccLayout.delta_x_minimum_for_label(delta_x_minimum_for_label);
+    data = maccLayout(data);
   };
-
-  y.domain([-ylimits[ylimit_chosen], ylimits[ylimit_chosen]]);
-  maccLayout.label_minimum_gap(y.invert(0)-y.invert(20));
-
-  data = maccLayout(data);
 
   var svg = d3.select("#chart").selectAll('svg').data([data]);
 
