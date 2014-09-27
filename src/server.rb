@@ -61,7 +61,7 @@ class TwentyFiftyServer < Sinatra::Base
     end
 
     get '/:style/*' do |style, id|
-      send_file "public/{:style}.html"
+      send_file "public/#{style}.html"
     end
 
     get "*" do
