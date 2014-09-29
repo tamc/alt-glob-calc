@@ -32,6 +32,10 @@ class TwentyFiftyServer < Sinatra::Base
     send_file 'model/model.xlsx'
   end
 
+  before do 
+    headers 'X-UA-Compatible' => 'IE=Edge,chrome=1'
+  end
+
   # This has the methods needed to dynamically create the view
   if development?
 
