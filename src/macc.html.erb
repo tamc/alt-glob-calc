@@ -417,8 +417,8 @@ var ylimits = [50, 100, 500, 1000];
 var ylimit_chosen = 3;
 
 var margin = {top: 50, right: 100, bottom: 300, left: 100},
-    width = 1400 - margin.left - margin.right,
-    height = 900 - margin.top - margin.bottom;
+    width = d3.select("body").node().offsetWidth - margin.left - margin.right,
+    height =(d3.select("body").node().offsetWidth*0.70) - margin.top - margin.bottom;
 
 var x = d3.scale.linear()
     .domain([-100,300])
