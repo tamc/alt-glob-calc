@@ -44,6 +44,18 @@ class DataFromModel
   end
 
 
+  def example_pathways
+    return @example_pathways if @example_pathways
+    @example_pathways = {}
+    excel.webtool_example_pathways.transpose.each do |pathway_data|
+      name = pathway_data.shift
+      code = convert_input_values_to_code(pathway_data).join
+      @example_pathways[name] = code
+    end
+    @example_pathways
+  end
+
+
   # Set the 9 decimal points between 1.1 and 3.9
   FLOAT_TO_LETTER_MAP = Hash["abcdefghijklmnopqrstuvwxyzABCD".split('').map.with_index { |l,i| [(i/10.0)+1,l] }]
   FLOAT_TO_LETTER_MAP[0.0] = '0'

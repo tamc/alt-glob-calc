@@ -145,7 +145,7 @@ div#infobox.show {
   </style>
   <body>
     <h1>Global Calculator&mdash;Marginal Abatement Cost Curve</h1>
-    <div class='controls'>Difference between your pathway and <span id='marginal_or_level_4'>Level 1 or 4</span> in <span id='year'>2050</span> using the <span href='' id='costtype'>central</span> cost estimates</div> 
+    <div class='controls'>Difference between <span id='pathway_name'>your pathway</span> and <span id='marginal_or_level_4'>Level 1 or 4</span> in <span id='year'>2050</span> using the <span href='' id='costtype'>central</span> cost estimates</div> 
     <div id='name'>&nbsp;</div>
     <div class='controls'>Rescale the <span id='xrescale'>x-axis</span> or <span id='yrescale'>y-axis</span></div>
     <div id='chart'> </div>
@@ -825,6 +825,12 @@ var choice_limit = [
   4.0,
 ];
 
+var example_pathways = d3.map(<%= DataFromModel.new.example_pathways.to_json %>);
+var pathway_names_for_code = d3.map(<%= DataFromModel.new.example_pathways.invert.to_json %>);
+var example_pathway_codes = example_pathways.values();
+var current_baseline_pathway_index = 2;
+var your_pathway_code = undefined;
+
 var choice_for_code = {};
 var name, c;
 
@@ -858,6 +864,7 @@ function set(new_code) {
     choices[i] = choice_for_code[c[i]];
   }
   updateUrl();
+  d3.select("#pathway_name").html(pathway_names_for_code.get(code()) || "your pathway");
   data.length = 0;
   implications = undefined;
   loadImplications();
@@ -1017,6 +1024,29 @@ d3.select("#marginal_or_level_4").on('click', function() {
     set(code());
     });
 
+d3.select("#pathway_name").on('click', function() {
+    if(pathway_names_for_code.get(code()) == undefined) {
+      your_pathway_code = code();
+    }
+
+    current_baseline_pathway_index -= 1;
+
+    if(current_baseline_pathway_index == -1 ) { 
+      if(your_pathway_code != undefined) {
+        set(your_pathway_code);
+        } else {
+          current_baseline_pathway_index = example_pathway_codes.length - 1; 
+          set(example_pathway_codes[current_baseline_pathway_index]);
+          }
+    } else if(current_baseline_pathway_index < 0 ) {
+      current_baseline_pathway_index = example_pathway_codes.length - 1; 
+      set(example_pathway_codes[current_baseline_pathway_index]);
+    } else {
+      set(example_pathway_codes[current_baseline_pathway_index]);
+    }
+
+});
+
 d3.select("#xrescale").on("click", function() {
     rescale_chart = true;
     draw_macc();
@@ -1030,13 +1060,16 @@ d3.select("#yrescale").on("click", function() {
 
 var url_elements = window.location.pathname.split('/');
 if(url_elements[2].length == 59) {
-  set(url_elements[2])
+  new_code = url_elements[2];
+  if(pathway_names_for_code.has(new_code)) {
+    current_baseline_pathway_index = example_pathway_codes.indexOf(new_code);
+  } else {
+    current_baseline_pathway_index +=1;
+  }
+  set(new_code)
 } else {
-  set("2222j21222gfgebf1jg1i2cjgjeeefpj2h1DD1111114221111111111j");
+  set(example_pathway_codes[current_baseline_pathway_index]);
 }
-
-
-
 
     </script>
     </body>
