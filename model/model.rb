@@ -171,6 +171,9 @@ class Model
     attach_function 'set_user_inputs_e60', [ExcelValue.by_value], :void
     attach_function 'set_user_inputs_e61', [ExcelValue.by_value], :void
     attach_function 'set_user_inputs_e62', [ExcelValue.by_value], :void
+    attach_function 'set_user_inputs_e63', [ExcelValue.by_value], :void
+    attach_function 'set_user_inputs_e64', [ExcelValue.by_value], :void
+    attach_function 'set_user_inputs_e65', [ExcelValue.by_value], :void
     attach_function 'user_inputs_h6', [], ExcelValue.by_value
     attach_function 'user_inputs_i6', [], ExcelValue.by_value
     attach_function 'user_inputs_j6', [], ExcelValue.by_value
@@ -798,6 +801,39 @@ class Model
     attach_function 'user_inputs_p62', [], ExcelValue.by_value
     attach_function 'user_inputs_q62', [], ExcelValue.by_value
     attach_function 'user_inputs_r62', [], ExcelValue.by_value
+    attach_function 'user_inputs_h63', [], ExcelValue.by_value
+    attach_function 'user_inputs_i63', [], ExcelValue.by_value
+    attach_function 'user_inputs_j63', [], ExcelValue.by_value
+    attach_function 'user_inputs_k63', [], ExcelValue.by_value
+    attach_function 'user_inputs_l63', [], ExcelValue.by_value
+    attach_function 'user_inputs_m63', [], ExcelValue.by_value
+    attach_function 'user_inputs_n63', [], ExcelValue.by_value
+    attach_function 'user_inputs_o63', [], ExcelValue.by_value
+    attach_function 'user_inputs_p63', [], ExcelValue.by_value
+    attach_function 'user_inputs_q63', [], ExcelValue.by_value
+    attach_function 'user_inputs_r63', [], ExcelValue.by_value
+    attach_function 'user_inputs_h64', [], ExcelValue.by_value
+    attach_function 'user_inputs_i64', [], ExcelValue.by_value
+    attach_function 'user_inputs_j64', [], ExcelValue.by_value
+    attach_function 'user_inputs_k64', [], ExcelValue.by_value
+    attach_function 'user_inputs_l64', [], ExcelValue.by_value
+    attach_function 'user_inputs_m64', [], ExcelValue.by_value
+    attach_function 'user_inputs_n64', [], ExcelValue.by_value
+    attach_function 'user_inputs_o64', [], ExcelValue.by_value
+    attach_function 'user_inputs_p64', [], ExcelValue.by_value
+    attach_function 'user_inputs_q64', [], ExcelValue.by_value
+    attach_function 'user_inputs_r64', [], ExcelValue.by_value
+    attach_function 'user_inputs_h65', [], ExcelValue.by_value
+    attach_function 'user_inputs_i65', [], ExcelValue.by_value
+    attach_function 'user_inputs_j65', [], ExcelValue.by_value
+    attach_function 'user_inputs_k65', [], ExcelValue.by_value
+    attach_function 'user_inputs_l65', [], ExcelValue.by_value
+    attach_function 'user_inputs_m65', [], ExcelValue.by_value
+    attach_function 'user_inputs_n65', [], ExcelValue.by_value
+    attach_function 'user_inputs_o65', [], ExcelValue.by_value
+    attach_function 'user_inputs_p65', [], ExcelValue.by_value
+    attach_function 'user_inputs_q65', [], ExcelValue.by_value
+    attach_function 'user_inputs_r65', [], ExcelValue.by_value
     attach_function 'user_inputs_e7', [], ExcelValue.by_value
     attach_function 'user_inputs_e8', [], ExcelValue.by_value
     attach_function 'user_inputs_e9', [], ExcelValue.by_value
@@ -854,6 +890,9 @@ class Model
     attach_function 'user_inputs_e60', [], ExcelValue.by_value
     attach_function 'user_inputs_e61', [], ExcelValue.by_value
     attach_function 'user_inputs_e62', [], ExcelValue.by_value
+    attach_function 'user_inputs_e63', [], ExcelValue.by_value
+    attach_function 'user_inputs_e64', [], ExcelValue.by_value
+    attach_function 'user_inputs_e65', [], ExcelValue.by_value
     attach_function 'user_inputs_g7', [], ExcelValue.by_value
     attach_function 'user_inputs_g8', [], ExcelValue.by_value
     attach_function 'user_inputs_g9', [], ExcelValue.by_value
@@ -910,6 +949,9 @@ class Model
     attach_function 'user_inputs_g60', [], ExcelValue.by_value
     attach_function 'user_inputs_g61', [], ExcelValue.by_value
     attach_function 'user_inputs_g62', [], ExcelValue.by_value
+    attach_function 'user_inputs_g63', [], ExcelValue.by_value
+    attach_function 'user_inputs_g64', [], ExcelValue.by_value
+    attach_function 'user_inputs_g65', [], ExcelValue.by_value
     attach_function 'user_inputs_f7', [], ExcelValue.by_value
     attach_function 'user_inputs_f8', [], ExcelValue.by_value
     attach_function 'user_inputs_f9', [], ExcelValue.by_value
@@ -966,6 +1008,9 @@ class Model
     attach_function 'user_inputs_f60', [], ExcelValue.by_value
     attach_function 'user_inputs_f61', [], ExcelValue.by_value
     attach_function 'user_inputs_f62', [], ExcelValue.by_value
+    attach_function 'user_inputs_f63', [], ExcelValue.by_value
+    attach_function 'user_inputs_f64', [], ExcelValue.by_value
+    attach_function 'user_inputs_f65', [], ExcelValue.by_value
     attach_function 'user_inputs_d7', [], ExcelValue.by_value
     attach_function 'user_inputs_d8', [], ExcelValue.by_value
     attach_function 'user_inputs_d9', [], ExcelValue.by_value
@@ -1022,22 +1067,13 @@ class Model
     attach_function 'user_inputs_d60', [], ExcelValue.by_value
     attach_function 'user_inputs_d61', [], ExcelValue.by_value
     attach_function 'user_inputs_d62', [], ExcelValue.by_value
+    attach_function 'user_inputs_d63', [], ExcelValue.by_value
+    attach_function 'user_inputs_d64', [], ExcelValue.by_value
+    attach_function 'user_inputs_d65', [], ExcelValue.by_value
     # end of User inputs
     # end of User output preferences
     # end of Contents
     # end of User guide
-    attach_function 'detailed_lever_guides_b69', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_c69', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_d69', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_e69', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_b70', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_c70', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_d70', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_e70', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_b71', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_c71', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_d71', [], ExcelValue.by_value
-    attach_function 'detailed_lever_guides_e71', [], ExcelValue.by_value
     attach_function 'detailed_lever_guides_b72', [], ExcelValue.by_value
     attach_function 'detailed_lever_guides_c72', [], ExcelValue.by_value
     attach_function 'detailed_lever_guides_d72', [], ExcelValue.by_value
@@ -1050,6 +1086,18 @@ class Model
     attach_function 'detailed_lever_guides_c74', [], ExcelValue.by_value
     attach_function 'detailed_lever_guides_d74', [], ExcelValue.by_value
     attach_function 'detailed_lever_guides_e74', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_b75', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_c75', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_d75', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_e75', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_b76', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_c76', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_d76', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_e76', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_b77', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_c77', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_d77', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_e77', [], ExcelValue.by_value
     attach_function 'detailed_lever_guides_b5', [], ExcelValue.by_value
     attach_function 'detailed_lever_guides_c5', [], ExcelValue.by_value
     attach_function 'detailed_lever_guides_d5', [], ExcelValue.by_value
@@ -1890,6 +1938,48 @@ class Model
     attach_function 'detailed_lever_guides_m64', [], ExcelValue.by_value
     attach_function 'detailed_lever_guides_n64', [], ExcelValue.by_value
     attach_function 'detailed_lever_guides_o64', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_b65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_c65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_d65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_e65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_f65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_g65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_h65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_i65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_j65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_k65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_l65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_m65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_n65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_o65', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_b66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_c66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_d66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_e66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_f66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_g66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_h66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_i66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_j66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_k66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_l66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_m66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_n66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_o66', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_b67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_c67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_d67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_e67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_f67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_g67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_h67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_i67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_j67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_k67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_l67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_m67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_n67', [], ExcelValue.by_value
+    attach_function 'detailed_lever_guides_o67', [], ExcelValue.by_value
     # end of Detailed lever guides
     attach_function 'lever_graphs_b2649', [], ExcelValue.by_value
     attach_function 'lever_graphs_c2649', [], ExcelValue.by_value

@@ -132,7 +132,7 @@ div#infobox {
   transition: color 1s;
   background-color: rgba(255,255,255,0);
   color: rgba(0,0,0,0);
-  position: absolute;
+  position: fixed;
   padding: 10px;
   right: 0px;
   bottom: 0px;
@@ -616,7 +616,7 @@ function draw_macc() {
     d3.select("#infobox").html(
         "Changing "+highlighted_rect.name+" "+
         emissions_direction+" emissions by "+format(Math.abs(highlighted_rect.abatement))+"&thinsp;GtCO<sub>2</sub>e and "+
-        costs_direction+" costs by $"+format(Math.abs(highlighted_rect.incremental_cost))+"&thinsp;bn (equivalent to "+
+        costs_direction+" costs by $"+format(Math.abs(highlighted_rect.incremental_cost/1000.0))+"&thinsp;trillion (equivalent to "+
         format(highlighted_rect.incremental_cost/Math.abs(highlighted_rect.abatement))+"&thinsp;$/tCO<sub>2</sub>e)"
         )
       .classed("show", true);
@@ -668,7 +668,8 @@ var choice_names = [
   "Passenger distance",
   "Freight distance",
   "Transport Mode",
-  "Transport Occupancy, load & ownership",
+  "Transport Occupancy, load",
+  "Vehicle ownership",
   "Transport Efficiency",
   "Vehicle Electric and hydrogen",
   "Building size",
@@ -696,6 +697,7 @@ var choice_names = [
   "Storage and demand shifting",
   "Calories consumed",
   "Meat consumed",
+  "Type of meat",
   "Crop yields",
   "Land-use efficiency ",
   "Livestock yields",
@@ -729,6 +731,7 @@ var choice_css = [
   "lifestyle",
   "lifestyle",
   "efficiency",
+  "lifestyle",
   "fuel",
   "lifestyle",
   "lifestyle",
@@ -753,6 +756,7 @@ var choice_css = [
   "fuel",
   "fuel",
   "fuel",
+  "lifestyle",
   "lifestyle",
   "lifestyle",
   "bio",
@@ -773,6 +777,8 @@ var choice_css = [
 var choice_limit = [
   3.0,
   3.0,
+  4.0,
+  4.0,
   4.0,
   4.0,
   4.0,
@@ -878,7 +884,7 @@ function code(choice_array) {
 function marginalise() {
   var marginal_codes = [];
   var i, c, l, d;
-  for(i = 0; i < 46; ++i) {
+  for(i = 0; i < 48; ++i) {
     l = choices[i];
     c = choices.slice();
     if(l>=2) { 
@@ -973,7 +979,7 @@ function implication_loaded(d) {
   if((implications != undefined) && (data.length == expected_number_of_marginal_values)) {
     clearInterval(loading_timer);
     d3.select("#loading").html("");
-    d3.select("#name").html("Total cost: $"+format(temp.cost)+"&thinsp;bn; emissions: "+format(temp.emissions)+"&thinsp;GtCO2e; warming: "+temp_format(temp.warming[1])+"&ndash;"+temp_format(temp.warming[0])+"&deg;C");
+    d3.select("#name").html("Total cost: $"+format(temp.cost/1000)+"&thinsp;trillion; emissions: "+format(temp.emissions)+"&thinsp;GtCO2e; warming: "+temp_format(temp.warming[1])+"&ndash;"+temp_format(temp.warming[0])+"&deg;C");
     draw_macc();
   }
 }
@@ -1024,7 +1030,7 @@ d3.select("#yrescale").on("click", function() {
     });
 
 var url_elements = window.location.pathname.split('/');
-if(url_elements[2].length == 57) {
+if(url_elements[2].length == 59) {
   set(url_elements[2])
 } else {
   set("2222j21222gfgebf1jg1i2cjgjeeefpj2h1DD1111114221111111111j");

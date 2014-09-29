@@ -94,11 +94,11 @@ class DataFromModel
   def convert_code_to_input_values(array)
     array.map.with_index do |entry, index|
       case index
-      when 47;
+      when 50;
         LETTER_TO_CLIMATE_SENSITIVITY_MAP[entry]
-      when 48;
+      when 51;
         LETTER_TO_COUNTRY_MAP[entry]
-      when 49..55
+      when 52..59
         LETTER_TO_FUEL_COST_MAP[entry]
       else 
         LETTER_TO_FLOAT_MAP[entry].to_f || entry.to_f
