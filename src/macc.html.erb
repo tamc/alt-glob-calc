@@ -866,6 +866,7 @@ function set(new_code) {
   updateUrl();
   d3.select("#pathway_name").html(pathway_names_for_code.get(code()) || "your pathway");
   data.length = 0;
+  marginal_details = d3.map();
   implications = undefined;
   loadImplications();
   loadMarginals();
@@ -947,6 +948,7 @@ var format = d3.format(".0f");
 var temp_format = d3.format(".1f");
 
 function implication_loaded(d) {
+  if(!marginal_details.has(d.code) && d.code != code()) { return; }
 
   var temp = {
     code: d.code,
